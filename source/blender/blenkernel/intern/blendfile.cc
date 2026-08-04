@@ -1522,6 +1522,7 @@ UserDef *BKE_blendfile_userdef_from_defaults()
 
   userdef->versionfile = BLENDER_FILE_VERSION;
   userdef->subversionfile = BLENDER_FILE_SUBVERSION;
+  userdef->uiflag = USER_SPLASH_DISABLE;
 
   /* Add-ons. */
   {
