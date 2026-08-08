@@ -165,6 +165,12 @@ void WM_main(bContext *C) ATTR_NORETURN;
  */
 void WM_init_splash_on_startup(bContext *C);
 /**
+ * Show the first-run setup wizard as needed on startup.
+ *
+ * The wizard may not show depending on user preferences and background-mode.
+ */
+void WM_init_setup_wizard_on_startup(bContext *C);
+/**
  * Show the splash screen.
  */
 void WM_init_splash(bContext *C);

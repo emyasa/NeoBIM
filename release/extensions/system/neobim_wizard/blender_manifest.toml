@@ -1,0 +1,12 @@
+schema_version = "1.0.0"
+id = "neobim_wizard"
+version = "0.1.0"
+name = "NeoBIM First Run Wizard"
+tagline = "First-run unit system setup wizard"
+maintainer = "NeoBIM Authors"
+type = "add-on"
+blender_version_min = "5.1.0"
+license = ["SPDX:GPL-2.0-or-later"]
+tags = [
+    "User Interface"
+]

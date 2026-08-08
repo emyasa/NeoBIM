@@ -412,6 +412,39 @@ void WM_init_splash_on_startup(bContext *C)
   WM_init_splash(C);
 }
 
+static bool wm_init_setup_wizard_show_on_startup_check()
+{
+  if (G.background) {
+    return false;
+  }
+
+  /* First run: no user preferences exist yet, show the setup wizard so the
+   * unit system is in place before the user sees the application. */
+  return !bke::preferences::exists();
+}
+
+void WM_init_setup_wizard_on_startup(bContext *C)
+{
+  if (!wm_init_setup_wizard_show_on_startup_check()) {
+    return;
+  }
+
+  wmWindowManager *wm = CTX_wm_manager(C);
+  /* NOTE(@ideasman42): this should practically never happen. */
+  if (wm->windows.is_empty()) [[unlikely]] {
+    return;
+  }
+
+  wmWindow *prevwin = CTX_wm_window(C);
+  CTX_wm_window_set(C, static_cast<wmWindow *>(wm->windows.first));
+  WM_operator_name_call(C,
+                        "NEOBIM_OT_first_run_wizard",
+                        wm::OpCallContext::InvokeDefault,
+                        nullptr,
+                        nullptr);
+  CTX_wm_window_set(C, prevwin);
+}
+
 void WM_init_splash(bContext *C)
 {
   wmWindowManager *wm = CTX_wm_manager(C);

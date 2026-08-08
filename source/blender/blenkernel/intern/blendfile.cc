@@ -1536,6 +1536,7 @@ UserDef *BKE_blendfile_userdef_from_defaults()
         "pose_library",
         "bl_pkg",
         "bl_ext.system.bonsai",
+        "bl_ext.system.neobim_wizard",
     };
     for (int i = 0; i < ARRAY_SIZE(addons); i++) {
       bAddon *addon = BKE_addon_new();
