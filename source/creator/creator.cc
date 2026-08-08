@@ -656,8 +656,11 @@ int main(int argc,
     /* Shows the splash as needed. */
     WM_init_splash_on_startup(C);
 
-    /* Shows the first-run setup wizard as needed. */
-    WM_init_setup_wizard_on_startup(C);
+    /* Shows the first-run setup wizard as needed. On macOS this blocks until
+     * setup is completed; a quit without completing exits the application. */
+    if (!WM_init_setup_wizard_on_startup(C)) {
+      WM_exit(C, EXIT_FAILURE);
+    }
 
     WM_main(C);
   }

@@ -167,9 +167,30 @@ void WM_init_splash_on_startup(bContext *C);
 /**
  * Show the first-run setup wizard as needed on startup.
  *
- * The wizard may not show depending on user preferences and background-mode.
+ * On macOS this is a blocking native dialog the user cannot dismiss without
+ * completing setup. Returns false when the user chose to quit without doing
+ * so, in which case the caller should exit and let the wizard re-appear on
+ * the next launch. On all other platforms this is a no-op that returns true.
  */
-void WM_init_setup_wizard_on_startup(bContext *C);
+bool WM_init_setup_wizard_on_startup(bContext *C);
+
+#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
+namespace neobim {
+struct SetupWizardSelection {
+  std::string unit_system; /* "METRIC" | "IMPERIAL" | "NONE". */
+  std::string length_unit; /* e.g. "MILLIMETERS" | "INCHES" | "ADAPTIVE". */
+};
+enum class SetupWizardResult : int {
+  kSetupComplete,
+  kSetupExit,
+};
+/**
+ * Run the native first-run setup wizard, blocking until the user either
+ * completes setup or chooses to quit without doing so.
+ */
+SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection);
+}  // namespace neobim
+#endif /* __APPLE__ && !WITH_HEADLESS && !WITH_PYTHON_MODULE */
 /**
  * Show the splash screen.
  */

@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <optional>
 
 #include "MEM_guardedalloc.h"
 
@@ -423,26 +425,43 @@ static bool wm_init_setup_wizard_show_on_startup_check()
   return !bke::preferences::exists();
 }
 
-void WM_init_setup_wizard_on_startup(bContext *C)
+bool WM_init_setup_wizard_on_startup(bContext *C)
 {
+  (void)C;
+
   if (!wm_init_setup_wizard_show_on_startup_check()) {
-    return;
+    return true;
   }
 
-  wmWindowManager *wm = CTX_wm_manager(C);
-  /* NOTE(@ideasman42): this should practically never happen. */
-  if (wm->windows.is_empty()) [[unlikely]] {
-    return;
+#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
+  neobim::SetupWizardSelection selection;
+  if (neobim::setup_wizard_run(selection) != neobim::SetupWizardResult::kSetupComplete) {
+    /* Quit without completing setup: nothing is written, so the wizard is
+     * shown again on the next launch. */
+    return false;
   }
 
-  wmWindow *prevwin = CTX_wm_window(C);
-  CTX_wm_window_set(C, static_cast<wmWindow *>(wm->windows.first));
-  WM_operator_name_call(C,
-                        "NEOBIM_OT_first_run_wizard",
-                        wm::OpCallContext::InvokeDefault,
-                        nullptr,
-                        nullptr);
-  CTX_wm_window_set(C, prevwin);
+  /* Hand the chosen values to the addon through a JSON file. The addon reads
+   * it right after startup, applies the units and deletes it. */
+  const std::optional<std::string> config_dir = BKE_appdir_folder_id_create(
+      BLENDER_USER_CONFIG, nullptr);
+  if (config_dir.has_value()) {
+    const std::string json_path = *config_dir + "/neobim_setup.json";
+    std::ofstream json(json_path);
+    json << "{\"unit_system\":\"" << selection.unit_system << "\",\"length_unit\":\""
+         << selection.length_unit << "\"}\n";
+    if (!json) {
+      fprintf(stderr, "NeoBIM: failed to write '%s'\n", json_path.c_str());
+    }
+  }
+  else {
+    fprintf(stderr, "NeoBIM: failed to resolve the user configuration directory\n");
+  }
+
+  return true;
+#else
+  return true;
+#endif
 }
 
 void WM_init_splash(bContext *C)
