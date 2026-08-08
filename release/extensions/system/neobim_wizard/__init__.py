@@ -11,6 +11,7 @@ new project created afterwards inherits them.
 """
 
 import bpy
+from bpy.app.handlers import persistent
 from bpy.props import BoolProperty, EnumProperty
 from bpy.types import AddonPreferences, Operator
 
@@ -84,6 +85,38 @@ class NeoBIMWizardPreferences(AddonPreferences):
         default=False,
     )
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        col = layout.column()
+        col.prop(self, "unit_system")
+        if self.unit_system != "NONE":
+            col.prop(self, "length_unit")
+        col.separator()
+        col.label(text="Applied to every new project (File → New).", icon="INFO")
+
+
+@persistent
+def _apply_unit_preferences_to_new_scene(*_args):
+    """Apply the stored unit defaults to startup and `File → New` scenes.
+
+    Startup and new-file loads read with an empty `bpy.data.filepath`, so this
+    leaves already-saved project files untouched.
+    """
+    if bpy.data.filepath or bpy.context.preferences is None:
+        return
+    addon = bpy.context.preferences.addons.get(__package__)
+    if addon is None or not addon.preferences.setup_complete:
+        return
+    prefs = addon.preferences
+    # At startup `load_post` fires before the window context is established
+    # (the startup scene would otherwise keep the stale units from the
+    # startup file), so apply to every freshly loaded scene instead of
+    # `bpy.context.scene`. Startup and new-file loads have exactly one scene.
+    for scene in bpy.data.scenes:
+        scene.unit_settings.system = prefs.unit_system
+        scene.unit_settings.length_unit = prefs.length_unit
+
 
 class NEOBIM_OT_first_run_wizard(Operator):
     bl_idname = "neobim.first_run_wizard"
@@ -111,8 +144,6 @@ class NEOBIM_OT_first_run_wizard(Operator):
     from_timer: BoolProperty(default=False, options={"HIDDEN"})
 
     def invoke(self, context, event):
-        import sys
-        print("WZ invoke from_timer=%s" % self.from_timer, file=sys.stderr, flush=True)
         if not self.from_timer:
             bpy.app.timers.register(
                 lambda: bpy.ops.neobim.first_run_wizard(
@@ -120,13 +151,9 @@ class NEOBIM_OT_first_run_wizard(Operator):
                 ),
                 first_interval=0.5,
             )
-            import sys
-            print("WZ deferred timer registered", file=sys.stderr, flush=True)
             return {"CANCELLED"}
 
         scene = context.scene
-        import sys
-        print("WZ showing dialog", file=sys.stderr, flush=True)
         if scene is not None:
             # Seed from the current startup scene. `unit_system` is set first so
             # the update callback resets `length_unit` to a valid value for the
@@ -158,12 +185,11 @@ class NEOBIM_OT_first_run_wizard(Operator):
         )
 
     def execute(self, context):
-        import sys
-        print("WZ execute", file=sys.stderr, flush=True)
         prefs = self._preferences(context)
-        # Set `length_unit` before `unit_system` so the update callback keeps it.
-        prefs.length_unit = self.length_unit
+        # `unit_system` first: `length_unit` is validated against the current
+        # system, so it must be set before the unit-specific value.
         prefs.unit_system = self.unit_system
+        prefs.length_unit = self.length_unit
         prefs.setup_complete = True
 
         scene = context.scene
@@ -177,8 +203,6 @@ class NEOBIM_OT_first_run_wizard(Operator):
         return {"FINISHED"}
 
     def cancel(self, context):
-        import sys
-        print("WZ cancel", file=sys.stderr, flush=True)
         # Skipping uses Blender's defaults, but still marks setup as done so
         # the wizard does not nag on every launch.
         self._preferences(context).setup_complete = True
@@ -206,8 +230,10 @@ classes = (NeoBIMWizardPreferences, NEOBIM_OT_first_run_wizard)
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+    bpy.app.handlers.load_post.append(_apply_unit_preferences_to_new_scene)
 
 
 def unregister():
+    bpy.app.handlers.load_post.remove(_apply_unit_preferences_to_new_scene)
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
