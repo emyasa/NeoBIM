@@ -389,6 +389,13 @@ bool WM_init_setup_wizard_on_startup(bContext *C) {
     if (neobim::setup_wizard_run(selection) != neobim::SetupWizardResult::kSetupComplete) {
         return false;
     }
+
+    const std::optional<std::string> config_dir = BKE_appdir_folder_id_create(BLENDER_USER_CONFIG, nullptr);
+    if (config_dir.has_value()) {
+        const std::string json_path = *config_dir + "/neobim_setup.json";
+        std::ofstream json(json_path);
+        json << "{\"unit_system\":\"" << selection.unit_system << "\"}\n";
+    }
 #endif
 
     return true;
