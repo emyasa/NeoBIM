@@ -1,0 +1,22 @@
+CompileFlags:
+  Add: [-std=c++20]
+
+---
+If:
+  PathMatch: source/creator/.*
+CompileFlags:
+  Add:
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/source/blender/windowmanager
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/source/blender/makesdna
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/source/blender/blenlib
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/intern/guardedalloc
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/lib/macos_arm64/fmt/include
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/source/blender/blenkernel
+    - -isystem
+    - /Users/emyasa/Development/projects/00-neobim.git/main/source/blender/makesrna
