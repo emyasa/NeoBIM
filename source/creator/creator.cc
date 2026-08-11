@@ -653,6 +653,11 @@ int main(int argc,
     /* Not supported, although it could be made to work if needed. */
     BLI_assert(app_state.main_arg_deferred == nullptr);
 
+    /* Shows NeoBIM setup wizard as needed */
+    if (!WM_init_setup_wizard_on_startup(C)) {
+        WM_exit(C, EXIT_FAILURE);
+    }
+
     /* Shows the splash as needed. */
     WM_init_splash_on_startup(C);
 

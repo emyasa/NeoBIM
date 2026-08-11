@@ -381,6 +381,19 @@ void WM_init(bContext *C, int argc, const char **argv)
   wm_homefile_read_post(C, params_file_read_post);
 }
 
+bool WM_init_setup_wizard_on_startup(bContext *C) {
+    (void)C;
+
+#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
+    neobim::SetupWizardSelection selection;
+    if (neobim::setup_wizard_run(selection) != neobim::SetupWizardResult::kSetupComplete) {
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 static bool wm_init_splash_show_on_startup_check()
 {
   if (U.uiflag & USER_SPLASH_DISABLE) {

@@ -159,6 +159,25 @@ void WM_exit(bContext *C, int exit_code) ATTR_NORETURN;
 void WM_main(bContext *C) ATTR_NORETURN;
 
 /**
+ * Show the NeoBIM setup wizard
+ */
+bool WM_init_setup_wizard_on_startup(bContext *C);
+
+#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
+namespace neobim {
+struct SetupWizardSelection {
+    std::string unit_system;
+};
+enum class SetupWizardResult : int {
+    kSetupComplete,
+    kSetupExit,
+};
+
+SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection);
+} // namespace neobim
+#endif
+
+/**
  * Show the splash screen as needed on startup.
  *
  * The splash may not show depending on a file being loaded and user preferences.

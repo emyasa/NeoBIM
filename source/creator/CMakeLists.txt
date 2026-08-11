@@ -149,6 +149,10 @@ set(SRC
   creator_intern.h
 )
 
+if(APPLE AND NOT WITH_HEADLESS AND NOT WITH_PYTHON_MODULE)
+  list(APPEND SRC neobim_setup_wizard.mm)
+endif()
+
 if(CMAKE_GENERATOR MATCHES "^Visual Studio.+")
   # This helps visual studio find the debugger visualizers
   list(APPEND SRC ${CMAKE_SOURCE_DIR}/tools/utils_ide/natvis/Blender.natvis)
