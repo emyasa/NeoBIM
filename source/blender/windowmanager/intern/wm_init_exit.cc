@@ -396,7 +396,9 @@ bool WM_init_setup_wizard_on_startup(bContext *C) {
         std::ofstream json(json_path);
         json << "{"
              << "   \"unit_system\":\"" << selection.unit_system << "\","
-             << "   \"length_unit\":\"" << selection.length_unit << "\""
+             << "   \"length_unit\":\"" << selection.length_unit << "\","
+             << "   \"area_unit\":\"" << selection.area_unit << "\","
+             << "   \"volume_unit\":\"" << selection.volume_unit << "\""
              << "}\n";
     }
 #endif

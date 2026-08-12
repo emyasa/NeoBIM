@@ -168,6 +168,8 @@ namespace neobim {
 struct SetupWizardSelection {
     std::string unit_system;
     std::string length_unit;
+    std::string area_unit;
+    std::string volume_unit;
 };
 enum class SetupWizardResult : int {
     kSetupComplete,

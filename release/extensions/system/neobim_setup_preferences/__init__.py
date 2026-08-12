@@ -42,7 +42,7 @@ def on_startup():
             saved_pref = json.load(f)
             bpy.context.scene.unit_settings.system = saved_pref.get("unit_system")
             bpy.context.scene.unit_settings.length_unit = saved_pref.get("length_unit")
-            # bpy.context.scene.BIMProperties.area_unit = 'KILO/SQUARE_METRE'
-            # bpy.context.scene.BIMProperties.volume_unit = 'CUBIC_METRE'
-            # bpy.context.scene.BIMProjectProperties.template_file = 'IFC4 Demo Template.ifc'
-            # bpy.ops.bim.create_project()
+            bpy.context.scene.BIMProperties.area_unit = saved_pref.get("area_unit")
+            bpy.context.scene.BIMProperties.volume_unit = saved_pref.get("volume_unit")
+            bpy.context.scene.BIMProjectProperties.template_file = 'IFC4 Demo Template.ifc'
+            bpy.ops.bim.create_project()
