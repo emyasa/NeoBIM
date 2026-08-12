@@ -21,6 +21,7 @@
 #include "DNA_userdef_types.h"
 #include "DNA_windowmanager_types.h"
 
+#include "BLI_fileops.hh"
 #include "BLI_listbase.hh"
 #include "BLI_memory_cache.hh"
 #include "BLI_path_utils.hh"
@@ -381,8 +382,28 @@ void WM_init(bContext *C, int argc, const char **argv)
   wm_homefile_read_post(C, params_file_read_post);
 }
 
+static bool wm_init_setup_wizard_show_on_startup_check() {
+  if (G.background) {
+    return false;
+  }
+
+  /* First run: no setup wizard configuration exists yet, show the setup wizard
+   * so the unit system is in place before the user sees the application. */
+  const std::optional<std::string> config_dir = BKE_appdir_folder_id_create(BLENDER_USER_CONFIG, nullptr);
+  if (config_dir.has_value()) {
+    const std::string json_path = *config_dir + "/neobim_setup.json";
+    return !BLI_exists(json_path.c_str());
+  }
+
+  return true;
+}
+
 bool WM_init_setup_wizard_on_startup(bContext *C) {
     (void)C;
+
+    if (!wm_init_setup_wizard_show_on_startup_check()) {
+        return true;
+    }
 
 #if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
     neobim::SetupWizardSelection selection;
