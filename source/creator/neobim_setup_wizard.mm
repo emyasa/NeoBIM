@@ -1,14 +1,47 @@
 #import <AppKit/AppKit.h>
+#include <cstdio>
 
 #include "WM_api.hh"
 
 @interface NeoBIMSetupWizardController : NSObject
 @property(strong) NSPopUpButton *systemDropdown;
+@property(strong) NSPopUpButton *lengthDropdown;
+- (void)systemChanged:(id)sender;
 @end
 
 @implementation NeoBIMSetupWizardController
 - (void)updateSystemDropdown {
-    [self.systemDropdown selectItemAtIndex:1];
+    [self.lengthDropdown removeAllItems];
+    switch (self.systemDropdown.indexOfSelectedItem) {
+        case 0:
+            [self.lengthDropdown addItemWithTitle:@"Adaptive"];
+            break;
+        case 1:
+            [self.lengthDropdown addItemsWithTitles:@[
+                @"Adaptive",
+                @"Kilometers",
+                @"Meters",
+                @"Centimeters",
+                @"Millimeters",
+                @"Micrometers",
+            ]];
+            [self.lengthDropdown selectItemAtIndex:4];
+            break;
+        case 2:
+            [self.lengthDropdown addItemsWithTitles:@[
+                @"Adaptive",
+                @"Miles",
+                @"Feet",
+                @"Inches",
+                @"Thou",
+            ]];
+            [self.lengthDropdown selectItemAtIndex:2];
+            break;
+    }
+}
+- (void)systemChanged:(id)sender {
+    (void)sender;
+    [self updateSystemDropdown];
 }
 @end
 
@@ -40,12 +73,33 @@ SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection) {
         NSPopUpButton *system_dropdown = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(120, 56, 260, 26)
             pullsDown:NO];
         [system_dropdown addItemsWithTitles:@[@"None", @"Metric", @"Imperial"]];
+        [system_dropdown selectItemAtIndex:1];
         system_dropdown.target = controller;
+        system_dropdown.action = @selector(systemChanged:);
         controller.systemDropdown = system_dropdown;
-        [controller updateSystemDropdown];
+
+        NSTextField *length_label = [NSTextField labelWithString:@"Length Unit"];
+        length_label.frame = NSMakeRect(0, 26, 110, 16);
+        length_label.alignment = NSTextAlignmentRight;
+
+        NSPopUpButton *length_dropdown = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(120, 20, 260, 26)
+            pullsDown:NO];
+        [length_dropdown addItemsWithTitles:@[
+            @"Adaptive",
+            @"Kilometers",
+            @"Meters",
+            @"Centimeters",
+            @"Millimeters",
+            @"Micrometers",
+        ]];
+        [length_dropdown selectItemAtIndex:4];
+
+        controller.lengthDropdown = length_dropdown;
 
         [accessory addSubview:system_label];
         [accessory addSubview:system_dropdown];
+        [accessory addSubview:length_label];
+        [accessory addSubview:length_dropdown];
         alert.accessoryView = accessory;
 
         const NSModalResponse response = [alert runModal];
@@ -53,9 +107,8 @@ SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection) {
             return SetupWizardResult::kSetupExit;
         }
 
-        static const char *systemDropdownKeys[3] = {"NONE", "METRIC", "IMPERIAL"};
-        NSInteger index = [system_dropdown indexOfSelectedItem];
-        r_selection.unit_system = systemDropdownKeys[index];
+        r_selection.unit_system = system_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
+        r_selection.length = length_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
 
         return SetupWizardResult::kSetupComplete;
     }
