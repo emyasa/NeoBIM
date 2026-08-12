@@ -167,7 +167,7 @@ bool WM_init_setup_wizard_on_startup(bContext *C);
 namespace neobim {
 struct SetupWizardSelection {
     std::string unit_system;
-    std::string length;
+    std::string length_unit;
 };
 enum class SetupWizardResult : int {
     kSetupComplete,

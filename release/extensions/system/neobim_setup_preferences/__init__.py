@@ -39,10 +39,10 @@ def on_startup():
     json_path = os.path.join(bpy.utils.user_resource("CONFIG"), "neobim_setup.json")
     if os.path.isfile(json_path):
         with open(json_path) as f:
-            unit_system = json.load(f).get("unit_system")
-
-        prefs = bpy.context.preferences.addons[__package__].preferences
-        prefs.unit_system = unit_system
-
-        bpy.context.scene.unit_settings.system = prefs.unit_system
-    # bpy.ops.bim.new_project(preset="metric_m")
+            saved_pref = json.load(f)
+            bpy.context.scene.unit_settings.system = saved_pref.get("unit_system")
+            bpy.context.scene.unit_settings.length_unit = saved_pref.get("length_unit")
+            # bpy.context.scene.BIMProperties.area_unit = 'KILO/SQUARE_METRE'
+            # bpy.context.scene.BIMProperties.volume_unit = 'CUBIC_METRE'
+            # bpy.context.scene.BIMProjectProperties.template_file = 'IFC4 Demo Template.ifc'
+            # bpy.ops.bim.create_project()

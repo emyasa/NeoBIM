@@ -395,7 +395,8 @@ bool WM_init_setup_wizard_on_startup(bContext *C) {
         const std::string json_path = *config_dir + "/neobim_setup.json";
         std::ofstream json(json_path);
         json << "{"
-             << "   \"unit_system\":\"" << selection.unit_system << "\""
+             << "   \"unit_system\":\"" << selection.unit_system << "\","
+             << "   \"length_unit\":\"" << selection.length_unit << "\""
              << "}\n";
     }
 #endif

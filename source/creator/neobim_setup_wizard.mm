@@ -108,7 +108,7 @@ SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection) {
         }
 
         r_selection.unit_system = system_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
-        r_selection.length = length_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
+        r_selection.length_unit = length_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
 
         return SetupWizardResult::kSetupComplete;
     }
