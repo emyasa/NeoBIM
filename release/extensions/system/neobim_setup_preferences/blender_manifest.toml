@@ -1,0 +1,12 @@
+schema_version = "1.0.0"
+id = "neobim_setup_preferences"
+version = "0.1.0"
+name = "NeoBIM Preferred Unit System Setup"
+tagline = "Unit system setup preferences"
+maintainer = "NeoBIM Authors"
+type = "add-on"
+blender_version_min = "5.1.0"
+license = ["SPDX:GPL-2.0-or-later"]
+tags = [
+    "User Interface"
+]

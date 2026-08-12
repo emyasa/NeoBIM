@@ -53,6 +53,10 @@ SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection) {
             return SetupWizardResult::kSetupExit;
         }
 
+        static const char *systemDropdownKeys[3] = {"NONE", "METRIC", "IMPERIAL"};
+        NSInteger index = [system_dropdown indexOfSelectedItem];
+        r_selection.unit_system = systemDropdownKeys[index];
+
         return SetupWizardResult::kSetupComplete;
     }
 }
