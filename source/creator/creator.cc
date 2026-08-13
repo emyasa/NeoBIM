@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "BPY_extern_run.hh"
+#include "BKE_main.hh"
 
 #ifdef WIN32
 #  ifdef WIN32_LEAN_AND_MEAN
@@ -660,11 +661,13 @@ int main(int argc,
         WM_exit(C, EXIT_FAILURE);
     }
 
-    const char *imports[] = {"bpy", nullptr};
-    BPY_run_string_exec(C,
-            imports,
-            "import bl_ext.system.neobim_setup_preferences as neobim_setup_preferences\n"
-            "neobim_setup_preferences.on_startup()");
+    if (BKE_main_blendfile_path_from_global()[0] == '\0') {
+        const char *imports[] = {"bpy", nullptr};
+        BPY_run_string_exec(C,
+                imports,
+                "import bl_ext.system.neobim_setup_preferences as neobim_setup_preferences\n"
+                "neobim_setup_preferences.on_startup()");
+    }
 
     /* Shows the splash as needed. */
     WM_init_splash_on_startup(C);
