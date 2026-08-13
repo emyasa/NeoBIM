@@ -166,10 +166,10 @@ bool WM_init_setup_wizard_on_startup(bContext *C);
 #if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
 namespace neobim {
 struct SetupWizardSelection {
-    std::string unit_system;
-    std::string length_unit;
-    std::string area_unit;
-    std::string volume_unit;
+    int unit_system;
+    int length_unit;
+    int area_unit;
+    int volume_unit;
 };
 enum class SetupWizardResult : int {
     kSetupComplete,

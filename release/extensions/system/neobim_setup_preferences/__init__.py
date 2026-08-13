@@ -1,6 +1,3 @@
-import os
-import json
-
 import bpy
 from bpy.props import EnumProperty
 from bpy.types import AddonPreferences
@@ -57,11 +54,11 @@ _VOLUME_UNIT_ITEMS = (
     ("cubic yard", "Cubic Yard", "Cubic Yard"),
 )
 
-def get_length_unit_items(self, context):
-    if self.unit_system == "METRIC":
+def get_length_unit_items(unit_system):
+    if unit_system == "METRIC":
         return _LENGTH_METRIC_ITEMS
 
-    elif self.unit_system == "IMPERIAL":
+    elif unit_system == "IMPERIAL":
         return _LENGTH_IMPERIAL_ITEMS
 
     return (("ADAPTIVE", "Adaptive", "Adaptive"),)
@@ -76,7 +73,7 @@ class NeoBIMSetupPreferences(AddonPreferences):
 
     length_unit: EnumProperty(
         name="Length Unit",
-        items=get_length_unit_items,
+        items=lambda self, context: get_length_unit_items(self.unit_system),
     )
 
     area_unit: EnumProperty(
@@ -108,20 +105,16 @@ def unregister():
     bpy.utils.unregister_class(cls)
 
 def on_startup():
-    json_path = os.path.join(bpy.utils.user_resource("CONFIG"), "neobim_setup.json")
-    if os.path.isfile(json_path):
-        with open(json_path) as f:
-            saved_pref = json.load(f)
+    raw_prefs = bpy.context.preferences.addons[__package__].preferences.bl_system_properties_get()
 
-            prefs = bpy.context.preferences.addons[__package__].preferences
-            prefs.unit_system = saved_pref.get("unit_system")
-            prefs.length_unit = saved_pref.get("length_unit")
-            prefs.area_unit = saved_pref.get("area_unit")
-            prefs.volume_unit = saved_pref.get("volume_unit")
+    # No setup has been configured yet (e.g. the setup wizard never ran on this machine).
+    if ("unit_system" not in raw_prefs):
+        return
 
-            bpy.context.scene.unit_settings.system = saved_pref.get("unit_system")
-            bpy.context.scene.unit_settings.length_unit = saved_pref.get("length_unit")
-            bpy.context.scene.BIMProperties.area_unit = saved_pref.get("area_unit")
-            bpy.context.scene.BIMProperties.volume_unit = saved_pref.get("volume_unit")
-            bpy.context.scene.BIMProjectProperties.template_file = 'IFC4 Demo Template.ifc'
-            bpy.ops.bim.create_project()
+    unit_system = _UNIT_SYSTEM_ITEMS[raw_prefs["unit_system"]][0]
+    bpy.context.scene.unit_settings.system = unit_system
+    bpy.context.scene.unit_settings.length_unit = get_length_unit_items(unit_system)[raw_prefs["length_unit"]][0]
+    bpy.context.scene.BIMProperties.area_unit = _AREA_UNIT_ITEMS[raw_prefs["area_unit"]][0]
+    bpy.context.scene.BIMProperties.volume_unit = _VOLUME_UNIT_ITEMS[raw_prefs["volume_unit"]][0]
+    bpy.context.scene.BIMProjectProperties.template_file = 'IFC4 Demo Template.ifc'
+    bpy.ops.bim.create_project()

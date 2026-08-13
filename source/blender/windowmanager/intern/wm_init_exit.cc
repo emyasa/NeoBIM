@@ -56,6 +56,7 @@
 #include "BKE_addon.h"
 #include "BKE_appdir.hh"
 #include "BKE_blender_cli_command.hh"
+#include "BKE_idprop.hh"
 #include "BKE_mask.hh"     /* Free mask clipboard. */
 #include "BKE_material.hh" /* #BKE_material_copybuf_clear. */
 #include "BKE_studiolight.h"
@@ -382,21 +383,56 @@ void WM_init(bContext *C, int argc, const char **argv)
   wm_homefile_read_post(C, params_file_read_post);
 }
 
+static constexpr char kSetupPreferencesAddon[] = "bl_ext.system.neobim_setup_preferences";
+
+/**
+ * The setup wizard is shown until the NeoBIM setup preferences have been configured.
+ * These live in the add-on preferences (part of `userpref.blend`), so the native setup
+ * wizard seeds them directly and they persist like any other add-on preferences.
+ */
+static bool wm_init_setup_preferences_configured()
+{
+  const bAddon *addon = BKE_addon_find(&U.addons, kSetupPreferencesAddon);
+  if (addon == nullptr || addon->prop == nullptr) {
+    return false;
+  }
+  return IDP_GetPropertyFromGroup(addon->prop, "unit_system") != nullptr;
+}
+
 static bool wm_init_setup_wizard_show_on_startup_check() {
   if (G.background) {
     return false;
   }
 
-  /* First run: no setup wizard configuration exists yet, show the setup wizard
+  /* First run: no setup preferences exist yet, show the setup wizard
    * so the unit system is in place before the user sees the application. */
-  const std::optional<std::string> config_dir = BKE_appdir_folder_id_create(BLENDER_USER_CONFIG, nullptr);
-  if (config_dir.has_value()) {
-    const std::string json_path = *config_dir + "/neobim_setup.json";
-    return !BLI_exists(json_path.c_str());
+  return !wm_init_setup_preferences_configured();
+}
+
+#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_PYTHON_MODULE)
+static void wm_init_setup_wizard_apply_selection(const neobim::SetupWizardSelection &selection)
+{
+  bAddon *addon = BKE_addon_find(&U.addons, kSetupPreferencesAddon);
+  if (addon == nullptr) {
+    return;
   }
 
-  return true;
+  if (addon->prop == nullptr) {
+    addon->prop = bke::idprop::create_group(addon->module, IDP_FLAG_STATIC_TYPE).release();
+  }
+
+  if (IDP_GetPropertyFromGroup(addon->prop, "unit_system") == nullptr) {
+    IDP_AddToGroup(addon->prop, bke::idprop::create("unit_system", selection.unit_system).release());
+    IDP_AddToGroup(addon->prop, bke::idprop::create("length_unit", selection.length_unit).release());
+    IDP_AddToGroup(addon->prop, bke::idprop::create("area_unit", selection.area_unit).release());
+    IDP_AddToGroup(addon->prop, bke::idprop::create("volume_unit", selection.volume_unit).release());
+  }
+
+  U.runtime.is_dirty = true;
+  BKE_blendfile_userdef_write_all(nullptr);
 }
+
+#endif
 
 bool WM_init_setup_wizard_on_startup(bContext *C) {
     (void)C;
@@ -411,17 +447,8 @@ bool WM_init_setup_wizard_on_startup(bContext *C) {
         return false;
     }
 
-    const std::optional<std::string> config_dir = BKE_appdir_folder_id_create(BLENDER_USER_CONFIG, nullptr);
-    if (config_dir.has_value()) {
-        const std::string json_path = *config_dir + "/neobim_setup.json";
-        std::ofstream json(json_path);
-        json << "{"
-             << "   \"unit_system\":\"" << selection.unit_system << "\","
-             << "   \"length_unit\":\"" << selection.length_unit << "\","
-             << "   \"area_unit\":\"" << selection.area_unit << "\","
-             << "   \"volume_unit\":\"" << selection.volume_unit << "\""
-             << "}\n";
-    }
+    /* Seed the add-on preferences so they are applied on startup and persist in `userpref.blend`. */
+    wm_init_setup_wizard_apply_selection(selection);
 #endif
 
     return true;

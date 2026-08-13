@@ -172,10 +172,10 @@ SetupWizardResult setup_wizard_run(SetupWizardSelection &r_selection) {
             return SetupWizardResult::kSetupExit;
         }
 
-        r_selection.unit_system = system_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
-        r_selection.length_unit = length_dropdown.titleOfSelectedItem.uppercaseString.UTF8String;
-        r_selection.area_unit = ((NSString *) area_dropdown.selectedItem.representedObject).UTF8String;
-        r_selection.volume_unit = ((NSString *) volume_dropdown.selectedItem.representedObject).UTF8String;
+        r_selection.unit_system = system_dropdown.indexOfSelectedItem;
+        r_selection.length_unit = length_dropdown.indexOfSelectedItem;
+        r_selection.area_unit = area_dropdown.indexOfSelectedItem;
+        r_selection.volume_unit = volume_dropdown.indexOfSelectedItem;
 
         return SetupWizardResult::kSetupComplete;
     }
